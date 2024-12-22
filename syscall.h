@@ -20,3 +20,6 @@
 #define SYS_link   19
 #define SYS_mkdir  20
 #define SYS_close  21
+
+//task 4 
+#define SYS_getreadcount 22
