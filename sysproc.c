@@ -89,3 +89,9 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+//task 4
+int sys_getreadcount(void) {
+    extern int readcount; // Reference the global counter
+    return readcount;
+}
