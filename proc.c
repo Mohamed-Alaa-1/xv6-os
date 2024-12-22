@@ -7,6 +7,9 @@
 #include "proc.h"
 #include "spinlock.h"
 
+//task 5
+#include "random.c"
+
 struct {
   struct spinlock lock;
   struct proc proc[NPROC];
@@ -530,5 +533,45 @@ procdump(void)
         cprintf(" %p", pc[i]);
     }
     cprintf("\n");
+  }
+}
+
+
+//task 5
+void scheduler(void) {
+  struct proc *p;
+  for (;;) {
+    sti();
+
+    acquire(&ptable.lock);
+
+    int total_tickets = 0;
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+      if (p->state == RUNNABLE) {
+        total_tickets += p->tickets;
+      }
+    }
+
+    if (total_tickets > 0) {
+      int winner = random() % total_tickets;
+      int ticket_sum = 0;
+
+      for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+        if (p->state == RUNNABLE) {
+          ticket_sum += p->tickets;
+          if (ticket_sum > winner) {
+            proc = p;
+            p->ticks++;
+            switchuvm(p);
+            p->state = RUNNING;
+            swtch(&cpu->scheduler, p->context);
+            switchkvm();
+            proc = 0;
+            break;
+          }
+        }
+      }
+    }
+    release(&ptable.lock);
   }
 }
