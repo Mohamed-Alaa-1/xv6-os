@@ -7,6 +7,10 @@
 #include "x86.h"
 #include "syscall.h"
 
+//task 4
+#include "traps.h"
+#include "spinlock.h"
+
 // User code makes a system call with INT T_SYSCALL.
 // System call number in %eax.
 // Arguments on the stack, from the user call to the C
@@ -143,3 +147,20 @@ syscall(void)
     curproc->tf->eax = -1;
   }
 }
+
+//task 4
+extern int sys_fork(void);
+extern int sys_exit(void);
+extern int sys_wait(void);
+extern int sys_pipe(void);
+extern int sys_read(void);
+extern int sys_getreadcount(void); // Add the new system call
+
+static int (*syscalls[])(void) = {
+    [SYS_fork]          sys_fork,
+    [SYS_exit]          sys_exit,
+    [SYS_wait]          sys_wait,
+    [SYS_pipe]          sys_pipe,
+    [SYS_read]          sys_read,
+    [SYS_getreadcount]  sys_getreadcount, // Register the new system call
+};
