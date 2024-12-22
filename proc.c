@@ -203,6 +203,9 @@ fork(void)
   np->parent = curproc;
   *np->tf = *curproc->tf;
 
+  //task 5
+  np->tickets = curproc->tickets;
+
   // Clear %eax so that fork returns 0 in the child.
   np->tf->eax = 0;
 
