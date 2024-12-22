@@ -164,3 +164,13 @@ static int (*syscalls[])(void) = {
     [SYS_read]          sys_read,
     [SYS_getreadcount]  sys_getreadcount, // Register the new system call
 };
+
+ //task 5
+extern int sys_settickets(void);
+extern int sys_getpinfo(void);
+
+static int (*syscalls[])(void) = {
+  ...
+  [SYS_settickets] sys_settickets,
+  [SYS_getpinfo] sys_getpinfo,
+};
