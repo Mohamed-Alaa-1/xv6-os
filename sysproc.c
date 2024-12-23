@@ -6,10 +6,13 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
+int readcount = 0;
 
-//task 5
-#include "pstat.h"
-
+int
+sys_getreadcount(void)
+{
+  return readcount;
+}
 
 int
 sys_fork(void)
@@ -92,37 +95,4 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
-}
-
-//task 4
-int sys_getreadcount(void) {
-    extern int readcount; // Reference the global counter
-    return readcount;
-}
-
-//task 5
-int sys_settickets(void) {
-  int tickets;
-  if (argint(0, &tickets) < 0 || tickets < 1) {
-    return -1; // Invalid input
-  }
-  proc->tickets = tickets; // Set tickets for current process
-  return 0;
-}
-
-int sys_getpinfo(void) {
-  struct pstat *ps;
-  if (argptr(0, (void*)&ps, sizeof(*ps)) < 0) {
-    return -1; // Invalid pointer
-  }
-
-  acquire(&ptable.lock);
-  for (int i = 0; i < NPROC; i++) {
-    ps->inuse[i] = ptable.proc[i].state != UNUSED;
-    ps->tickets[i] = ptable.proc[i].tickets;
-    ps->pid[i] = ptable.proc[i].pid;
-    ps->ticks[i] = ptable.proc[i].ticks;
-  }
-  release(&ptable.lock);
-  return 0;
 }
