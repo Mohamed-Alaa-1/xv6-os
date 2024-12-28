@@ -3,7 +3,7 @@
 // Mostly argument checking, since we don't trust
 // user code, and calls into file.c and fs.c.
 //
-extern int readcount;  
+
 #include "types.h"
 #include "defs.h"
 #include "param.h"
@@ -18,6 +18,8 @@ extern int readcount;
 
 // Fetch the nth word-sized system call argument as a file descriptor
 // and return both the descriptor and the corresponding struct file.
+extern int readcount;
+
 static int
 argfd(int n, int *pfd, struct file **pf)
 {

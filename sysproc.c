@@ -6,8 +6,9 @@
 #include "memlayout.h"
 #include "mmu.h"
 #include "proc.h"
-int readcount = 0;
+#include "pstat.h"
 
+int readcount = 0;
 int
 sys_getreadcount(void)
 {
@@ -95,4 +96,30 @@ sys_uptime(void)
   xticks = ticks;
   release(&tickslock);
   return xticks;
+}
+
+int
+sys_settickets(void)
+{
+  int tickets;
+    if(argint(0,&tickets)<0){
+      //cprintf("settickets: error al obtener argumento en kernel");
+      return -1;
+  }
+  
+  struct proc *curproc = myproc();
+  curproc->num_tickets = tickets;
+  //cprintf("process %d has %d tickets", curproc->pid, curproc->num_tickets);
+  return 0;
+}
+
+int
+sys_getpinfo(void)
+{
+  struct pstat *stat; 
+  int n = sizeof(*stat);
+  if(argptr(0, (void *)&stat, n) < 0)
+    return -1;
+  getpinfo(stat);
+  return 0;
 }
