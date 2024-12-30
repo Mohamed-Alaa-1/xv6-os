@@ -1,12 +1,9 @@
 #include "param.h"
 #include "types.h"
 #include "defs.h"
-
-// Return a integer between 0 and ((2^32 - 1) / 2), which is 2147483647.
 uint
 random(void)
 {
-  // Take from http://stackoverflow.com/questions/1167253/implementation-of-rand
   static unsigned int z1 = 12345, z2 = 12345, z3 = 12345, z4 = 12345;
   unsigned int b;
   b  = ((z1 << 6) ^ z1) >> 13;
