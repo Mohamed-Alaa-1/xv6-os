@@ -1,6 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <unistd.h>
 
 struct Node {
     char *line;
@@ -31,7 +34,7 @@ int main(int argc, char *argv[]) {
     if (argc >= 2) {
         input = fopen(argv[1], "r");
         if (!input) {
-            fprintf(stderr, "error: cannot open file '%s'\n", argv[1]);
+            fprintf(stderr, "reverse: cannot open file '%s'\n", argv[1]);
             exit(1);
         }
     }
@@ -39,15 +42,31 @@ int main(int argc, char *argv[]) {
     // Handle output file
     if (argc == 3) {
         if (strcmp(argv[1], argv[2]) == 0) {
-            fprintf(stderr, "Input and output file must differ\n");
+            fprintf(stderr, "reverse: input and output file must differ\n");
             if (input != stdin) fclose(input);
             exit(1);
         }
         output = fopen(argv[2], "w");
         if (!output) {
-            fprintf(stderr, "error: cannot open file '%s'\n", argv[2]);
+            fprintf(stderr, "reverse: cannot open file '%s'\n", argv[2]);
             if (input != stdin) fclose(input);
             exit(1);
+        }
+
+        // Check if input and output are the same file (hardlinked)
+        if (input != stdin && output != stdout) {
+            int fd_in = fileno(input);
+            int fd_out = fileno(output);
+            struct stat stat_in, stat_out;
+
+            if (fstat(fd_in, &stat_in) == 0 && fstat(fd_out, &stat_out) == 0) {
+                if (stat_in.st_dev == stat_out.st_dev && stat_in.st_ino == stat_out.st_ino) {
+                    fprintf(stderr, "reverse: input and output file must differ\n");
+                    fclose(input);
+                    fclose(output);
+                    exit(1);
+                }
+            }
         }
     }
 
@@ -72,7 +91,7 @@ int main(int argc, char *argv[]) {
     if (input != stdin) fclose(input);
     if (output != stdout) fclose(output);
 
-    return 0;
+    exit(0); // Changed exit(1) to exit(0) for successful execution
 }
 
 // Remove trailing newline if it exists
@@ -94,13 +113,11 @@ void add_line(struct Node **head, char *line) {
     new_node->next = *head;
     *head = new_node;
 }
-
 void write_output(struct Node *head, FILE *output) {
     if (!head) return;  // Handle empty file case
-
     // First line doesn't need a leading newline
     fprintf(output, "%s", head->line);
-    
+
     // Subsequent lines need leading newlines
     struct Node *current = head->next;
     while (current != NULL) {
@@ -108,7 +125,6 @@ void write_output(struct Node *head, FILE *output) {
         current = current->next;
     }
 }
-
 void free_list(struct Node *head) {
     while (head) {
         struct Node *temp = head;
