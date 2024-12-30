@@ -1,74 +1,54 @@
 #include <stdio.h>
 #include <stdlib.h>
-#include <errno.h>
+#include <arpa/inet.h>
 
-void write_compressed_sequence(int count, int character) {
-    if (fwrite(&count, sizeof(int), 1, stdout) != 1) {
-        fprintf(stderr, "wzip: error writing to stdout\n");
-        exit(1);
-    }
-    if (fputc(character, stdout) == EOF) {
-        fprintf(stderr, "wzip: error writing to stdout\n");
-        exit(1);
-    }
-}
 
-void compress_file(FILE *fp) {
-    int count = 0;
-    int current_char;
-    int last_char = EOF;
-    
-    // Handle empty files
-    if (feof(fp)) {
-        return;
-    }
-
-    while ((current_char = fgetc(fp)) != EOF) {
-        if (ferror(fp)) {
-            fprintf(stderr, "wzip: error reading file\n");
-            exit(1);
-        }
-
-        if (last_char == EOF) {
-            last_char = current_char;
-            count = 1;
-        } else if (current_char == last_char) {
-            count++;
-        } else {
-            write_compressed_sequence(count, last_char);
-            last_char = current_char;
-            count = 1;
-        }
-    }
-
-    // Write the last sequence if exists
-    if (last_char != EOF) {
-        write_compressed_sequence(count, last_char);
-    }
+void writeBytes(int *count, char* old_buffer, char* buffer){
+    fwrite(count, sizeof(int),1,stdout);
+    fwrite(old_buffer, sizeof(char),1,stdout);
+    *count = 1;
+    old_buffer[0] = buffer[0];
 }
 
 int main(int argc, char *argv[]) {
-    if (argc < 2) {
-        fprintf(stderr, "wzip: file1 [file2 ...]\n");
-        return 1;
+
+    if(argc==1){
+        printf("wzip: file1 [file2 ...]\n");
+        exit(1);
     }
 
-    // Process all input files
-    for (int i = 1; i < argc; i++) {
-        FILE *fp = fopen(argv[i], "r");
-        if (fp == NULL) {
-            fprintf(stderr, "wzip: cannot open file\n");
-            return 1;
+    char old_buffer[1];
+    char buffer[1];
+    int count = 1;
+
+    for(int i=1; i<argc; i++){
+        FILE *fp = fopen(argv[i],"r");
+        if (fp==NULL){
+            printf("wzip: cannot open file\n");
+            exit(1);   
         }
-        compress_file(fp);
+
+        if(i==1) fread(old_buffer,sizeof(char),1,fp);
+
+        while(fread(buffer,sizeof(char),1,fp)!=0){
+            if(buffer[0] == old_buffer[0]){
+                count++;
+            }else{
+
+                writeBytes(&count, old_buffer, buffer);
+                
+                
+            }
+        }
+
+        if(i==argc-1){
+            writeBytes(&count, old_buffer, buffer);
+        }
+
+
         fclose(fp);
     }
 
-    // Ensure all data is written
-    if (fflush(stdout) != 0) {
-        fprintf(stderr, "wzip: error flushing output\n");
-        return 1;
-    }
 
     return 0;
 }
